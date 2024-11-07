@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Listening Test</title>
+    <title>Listening Test 4</title>
+
+    <!-- Liên Kết manifest.json -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4caf50" />
+
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -247,7 +252,7 @@
         </div>
 
         <!-- Tóm tắt tiến độ -->
-        <div id="progressSummary">Đã hoàn thành: 0/33</div>
+        <div id="progressSummary">Đã hoàn thành: 0/30</div>
 
         <!-- Phần ghi chú -->
         <div id="notesContainer">
@@ -263,6 +268,7 @@
       <div class="right-column">
         <!-- Embed Google Document -->
         <iframe
+          id="docIframe"
           src="https://docs.google.com/document/d/1QAUocDB6iiS_X_nC52HlF0ZGtR7xwNCg6gd6EAyyT5I/edit?usp=sharing"
           title="Listening Test Document"
         ></iframe>
@@ -270,6 +276,7 @@
     </div>
 
     <script>
+      // Lấy các phần tử DOM
       const audioPlayer = document.getElementById("audioPlayer");
       const audioSource = document.getElementById("audioSource");
       const audioSelect = document.getElementById("audioSelect");
@@ -286,13 +293,14 @@
       const shuffleBtn = document.getElementById("shuffleBtn");
       const notesArea = document.getElementById("notesArea");
       const timeDisplay = document.getElementById("timeDisplay");
+      const docIframe = document.getElementById("docIframe");
 
-      const totalAudios = 33;
+      const totalAudios = 30;
       let completedAudios =
         JSON.parse(localStorage.getItem("completedAudios")) || [];
       let notes = JSON.parse(localStorage.getItem("notes")) || {};
 
-      // Function để tạo các tùy chọn trong dropdown
+      // Hàm để tạo các tùy chọn trong dropdown
       function populateSelect() {
         audioSelect.innerHTML = ""; // Xóa các tùy chọn hiện tại
         for (let i = 1; i <= totalAudios; i++) {
@@ -467,6 +475,22 @@
         }
       }
 
+      // Xử lý iframe khi không có kết nối Internet
+      function updateOnlineStatus() {
+        if (!navigator.onLine) {
+          // Ẩn iframe khi offline
+          docIframe.style.display = "none";
+        } else {
+          // Hiển thị iframe khi online
+          docIframe.style.display = "block";
+        }
+      }
+
+      // Kiểm tra trạng thái mạng khi tải trang và khi thay đổi trạng thái mạng
+      window.addEventListener("load", updateOnlineStatus);
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
+
       // Khởi tạo với audio đầu tiên
       window.addEventListener("load", function () {
         // Kiểm tra chế độ tối
@@ -476,6 +500,9 @@
         }
 
         loadAudio(1);
+        updateNavButtons();
+        updateCompleteButton();
+        updateOnlineStatus();
       });
 
       // Tìm kiếm trong dropdown
@@ -498,29 +525,22 @@
         nextBtn.disabled = audioSelect.selectedIndex === totalAudios - 1;
       }
 
-      // Cập nhật nút điều hướng khi tải audio mới
-      function loadAudio(index) {
-        audioSource.src = index + ".mp3"; // Đặt nguồn audio
-        audioPlayer.load(); // Tải lại audio
-        audioPlayer.play(); // Tự động phát
-        currentAudio.textContent = audioSelect.options[index - 1].text.replace(
-          " ✔️",
-          ""
-        ); // Cập nhật tiêu đề
-        progressBar.style.width = "0%"; // Reset thanh tiến trình
-        loadNotes(index); // Tải ghi chú
-        updateCompleteButton(); // Cập nhật nút đánh dấu
-        updateNavButtons(); // Cập nhật nút điều hướng
+      // Service Worker đăng ký
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/service-worker.js").then(
+            function (registration) {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            },
+            function (err) {
+              console.log("ServiceWorker registration failed: ", err);
+            }
+          );
+        });
       }
-
-      // Gọi lại loadAudio để đảm bảo mọi thứ được cập nhật
-      audioPlayer.addEventListener("loadedmetadata", function () {
-        if (!timeDisplay.textContent.includes("/")) {
-          const duration = formatTime(audioPlayer.duration);
-          timeDisplay.textContent = `00:00 / ${duration}`;
-        }
-      });
     </script>
   </body>
 </html>
-git
