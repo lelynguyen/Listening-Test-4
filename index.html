@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,62 +7,518 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        text-align: center;
         background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        transition: background-color 0.3s, color 0.3s;
       }
+
+      /* Container chính với Flexbox */
+      .container {
+        display: flex;
+        flex-direction: row;
+        min-height: 100vh;
+      }
+
+      /* Cột bên trái chứa các điều khiển */
+      .left-column {
+        flex: 1;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        overflow-y: auto;
+      }
+
+      /* Cột bên phải chứa iframe */
+      .right-column {
+        flex: 2;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Search box cho dropdown */
+      .search-container {
+        margin-bottom: 20px;
+      }
+
+      #searchInput {
+        padding: 10px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Dropdown để chọn audio */
       select {
         padding: 10px;
         font-size: 16px;
-        margin-top: 20px;
-      }
-      audio {
         width: 100%;
-        margin-top: 20px;
+        box-sizing: border-box;
+        margin-bottom: 20px;
       }
-      iframe {
+
+      /* Hiển thị tiêu đề audio hiện tại */
+      #currentAudio {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      /* Hiển thị thời gian */
+      #timeDisplay {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      /* Thanh tiến trình tùy chỉnh */
+      #progressContainer {
         width: 100%;
-        height: 600px;
+        background-color: #ddd;
+        height: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      #progressBar {
+        height: 100%;
+        width: 0%;
+        background-color: #4caf50;
+      }
+
+      /* Các nút điều khiển */
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .controls button {
+        flex: 1 1 calc(50% - 10px);
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      /* Tóm tắt tiến độ */
+      #progressSummary {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+
+      /* Phần ghi chú */
+      #notesContainer {
+        margin-bottom: 20px;
+      }
+
+      #notesContainer textarea {
+        width: 100%;
+        height: 100px;
+        padding: 10px;
+        font-size: 16px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      /* Nút chuyển đổi chế độ tối */
+      #toggleDarkMode {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+
+      /* Completed option styling */
+      .completed {
+        color: green;
+        font-weight: bold;
+      }
+
+      /* Dark mode styles */
+      body.dark-mode {
+        background-color: #121212;
+        color: #ffffff;
+      }
+
+      body.dark-mode .left-column,
+      body.dark-mode .right-column {
+        background-color: #1e1e1e;
+      }
+
+      body.dark-mode select,
+      body.dark-mode input,
+      body.dark-mode button,
+      body.dark-mode textarea {
+        background-color: #2c2c2c;
+        color: #ffffff;
+        border: 1px solid #444;
+      }
+
+      body.dark-mode #progressContainer {
+        background-color: #333;
+      }
+
+      body.dark-mode #progressBar {
+        background-color: #bb86fc;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+
+        #toggleDarkMode {
+          top: auto;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .controls button {
+          flex: 1 1 100%;
+        }
+
+        .right-column iframe {
+          height: 400px;
+        }
+      }
+
+      /* Đảm bảo iframe chiếm toàn bộ cột bên phải */
+      .right-column iframe {
+        flex: 1;
+        width: 100%;
         border: none;
-        margin-top: 20px;
       }
     </style>
   </head>
   <body>
-    <h1>Listening Test 4</h1>
+    <h1 style="text-align: center; padding: 20px 0">Listening Test 4</h1>
 
-    <!-- Dropdown to select an audio -->
-    <select id="audioSelect">
-      <!-- Options will be inserted here -->
-    </select>
+    <!-- Nút chuyển đổi chế độ tối -->
+    <button id="toggleDarkMode">Chế độ Tối</button>
 
-    <audio id="audioPlayer" controls>
-      <source id="audioSource" src="1.mp3" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
+    <!-- Container chính -->
+    <div class="container">
+      <!-- Cột bên trái chứa các điều khiển -->
+      <div class="left-column">
+        <!-- Search box cho dropdown -->
+        <div class="search-container">
+          <input type="text" id="searchInput" placeholder="Tìm kiếm audio..." />
+        </div>
 
-    <!-- Embed Google Document -->
-    <iframe
-      src="https://docs.google.com/document/d/1QAUocDB6iiS_X_nC52HlF0ZGtR7xwNCg6gd6EAyyT5I/edit?usp=sharing"
-    ></iframe>
+        <!-- Dropdown để chọn audio -->
+        <select id="audioSelect">
+          <!-- Các tùy chọn sẽ được thêm vào đây -->
+        </select>
+
+        <!-- Hiển thị tiêu đề audio hiện tại -->
+        <div id="currentAudio">Audio 1</div>
+
+        <!-- Hiển thị thời gian -->
+        <div id="timeDisplay">00:00 / 00:00</div>
+
+        <!-- Thanh tiến trình tùy chỉnh -->
+        <div id="progressContainer">
+          <div id="progressBar"></div>
+        </div>
+
+        <!-- Audio player -->
+        <audio id="audioPlayer" controls>
+          <source id="audioSource" src="1.mp3" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+
+        <!-- Các nút điều khiển -->
+        <div class="controls">
+          <button id="prevBtn">Trước đó</button>
+          <button id="repeatBtn">Lặp lại</button>
+          <button id="nextBtn">Tiếp theo</button>
+          <button id="downloadBtn">Tải xuống</button>
+          <button id="completeBtn">Đánh dấu đã hoàn thành</button>
+          <button id="shuffleBtn">Phát Ngẫu Nhiên</button>
+        </div>
+
+        <!-- Tóm tắt tiến độ -->
+        <div id="progressSummary">Đã hoàn thành: 0/30</div>
+
+        <!-- Phần ghi chú -->
+        <div id="notesContainer">
+          <h3>Ghi Chú:</h3>
+          <textarea
+            id="notesArea"
+            placeholder="Thêm ghi chú cho audio này..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Cột bên phải chứa iframe -->
+      <div class="right-column">
+        <!-- Embed Google Document -->
+        <iframe
+          src="https://docs.google.com/document/d/1QAUocDB6iiS_X_nC52HlF0ZGtR7xwNCg6gd6EAyyT5I/edit?usp=sharing"
+          title="Listening Test Document"
+        ></iframe>
+      </div>
+    </div>
 
     <script>
       const audioPlayer = document.getElementById("audioPlayer");
       const audioSource = document.getElementById("audioSource");
       const audioSelect = document.getElementById("audioSelect");
+      const currentAudio = document.getElementById("currentAudio");
+      const repeatBtn = document.getElementById("repeatBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const completeBtn = document.getElementById("completeBtn");
+      const progressBar = document.getElementById("progressBar");
+      const searchInput = document.getElementById("searchInput");
+      const progressSummary = document.getElementById("progressSummary");
+      const toggleDarkMode = document.getElementById("toggleDarkMode");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const shuffleBtn = document.getElementById("shuffleBtn");
+      const notesArea = document.getElementById("notesArea");
+      const timeDisplay = document.getElementById("timeDisplay");
 
-      // Function to create select options dynamically
-      for (let i = 1; i <= 33; i++) {
-        const option = document.createElement("option");
-        option.value = i + ".mp3";
-        option.textContent = "Audio " + i;
-        audioSelect.appendChild(option);
+      const totalAudios = 30;
+      let completedAudios =
+        JSON.parse(localStorage.getItem("completedAudios")) || [];
+      let notes = JSON.parse(localStorage.getItem("notes")) || {};
+
+      // Function để tạo các tùy chọn trong dropdown
+      function populateSelect() {
+        audioSelect.innerHTML = ""; // Xóa các tùy chọn hiện tại
+        for (let i = 1; i <= totalAudios; i++) {
+          const option = document.createElement("option");
+          option.value = i + ".mp3";
+          option.textContent = "Audio " + i;
+          if (completedAudios.includes(i)) {
+            option.textContent += " ✔️";
+            option.classList.add("completed");
+          }
+          audioSelect.appendChild(option);
+        }
+        updateProgressSummary();
+        updateCompleteButton();
       }
 
-      // When user selects an audio file from the dropdown
+      // Khởi tạo dropdown
+      populateSelect();
+
+      // Cập nhật tổng tiến độ hoàn thành
+      function updateProgressSummary() {
+        progressSummary.textContent = `Đã hoàn thành: ${completedAudios.length}/${totalAudios}`;
+      }
+
+      // Khi người dùng chọn một audio từ dropdown
       audioSelect.addEventListener("change", function () {
-        audioSource.src = this.value; // Set the selected file as the source
-        audioPlayer.load(); // Reload the audio player to load the new source
-        audioPlayer.play(); // Auto play the selected audio
+        loadAudio(this.selectedIndex + 1);
+      });
+
+      // Hàm để tải audio dựa trên số thứ tự
+      function loadAudio(index) {
+        audioSource.src = index + ".mp3"; // Đặt nguồn audio
+        audioPlayer.load(); // Tải lại audio
+        audioPlayer.play(); // Tự động phát
+        currentAudio.textContent = audioSelect.options[index - 1].text.replace(
+          " ✔️",
+          ""
+        ); // Cập nhật tiêu đề
+        progressBar.style.width = "0%"; // Reset thanh tiến trình
+        loadNotes(index); // Tải ghi chú
+        updateCompleteButton(); // Cập nhật nút đánh dấu
+        updateNavButtons(); // Cập nhật nút điều hướng
+      }
+
+      // Nút Lặp lại
+      repeatBtn.addEventListener("click", function () {
+        audioPlayer.currentTime = 0;
+        audioPlayer.play();
+      });
+
+      // Nút Tải xuống
+      downloadBtn.addEventListener("click", function () {
+        const currentSrc = audioSource.src;
+        const link = document.createElement("a");
+        link.href = currentSrc;
+        link.download = currentSrc.substring(currentSrc.lastIndexOf("/") + 1);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+      // Nút Đánh dấu đã hoàn thành / Hủy đánh dấu
+      completeBtn.addEventListener("click", function () {
+        const selectedIndex = audioSelect.selectedIndex + 1; // 1-based index
+        const option = audioSelect.options[audioSelect.selectedIndex];
+        if (completedAudios.includes(selectedIndex)) {
+          // Hủy đánh dấu
+          completedAudios = completedAudios.filter(
+            (id) => id !== selectedIndex
+          );
+          option.textContent = option.textContent.replace(" ✔️", "");
+          option.classList.remove("completed");
+          completeBtn.textContent = "Đánh dấu đã hoàn thành";
+        } else {
+          // Đánh dấu
+          completedAudios.push(selectedIndex);
+          option.textContent += " ✔️";
+          option.classList.add("completed");
+          completeBtn.textContent = "Hủy đánh dấu đã hoàn thành";
+        }
+        localStorage.setItem(
+          "completedAudios",
+          JSON.stringify(completedAudios)
+        );
+        updateProgressSummary();
+      });
+
+      // Nút Phát Trước Đó
+      prevBtn.addEventListener("click", function () {
+        let currentIndex = audioSelect.selectedIndex;
+        if (currentIndex > 0) {
+          audioSelect.selectedIndex = currentIndex - 1;
+          loadAudio(currentIndex);
+        }
+      });
+
+      // Nút Phát Tiếp Theo
+      nextBtn.addEventListener("click", function () {
+        let currentIndex = audioSelect.selectedIndex;
+        if (currentIndex < totalAudios - 1) {
+          audioSelect.selectedIndex = currentIndex + 1;
+          loadAudio(currentIndex + 2);
+        }
+      });
+
+      // Nút Phát Ngẫu Nhiên
+      shuffleBtn.addEventListener("click", function () {
+        let randomIndex = Math.floor(Math.random() * totalAudios);
+        audioSelect.selectedIndex = randomIndex;
+        loadAudio(randomIndex + 1);
+      });
+
+      // Cập nhật thanh tiến trình và thời gian
+      audioPlayer.addEventListener("timeupdate", function () {
+        if (audioPlayer.duration) {
+          const progress =
+            (audioPlayer.currentTime / audioPlayer.duration) * 100;
+          progressBar.style.width = progress + "%";
+
+          // Cập nhật thời gian hiện tại và tổng thời lượng
+          const current = formatTime(audioPlayer.currentTime);
+          const duration = formatTime(audioPlayer.duration);
+          timeDisplay.textContent = `${current} / ${duration}`;
+        }
+      });
+
+      // Hàm định dạng thời gian
+      function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes < 10 ? "0" + minutes : minutes}:${
+          secs < 10 ? "0" + secs : secs
+        }`;
+      }
+
+      // Chuyển đổi chế độ tối
+      toggleDarkMode.addEventListener("click", function () {
+        document.body.classList.toggle("dark-mode");
+        if (document.body.classList.contains("dark-mode")) {
+          toggleDarkMode.textContent = "Chế độ Sáng";
+          localStorage.setItem("darkMode", "enabled");
+        } else {
+          toggleDarkMode.textContent = "Chế độ Tối";
+          localStorage.setItem("darkMode", "disabled");
+        }
+      });
+
+      // Hàm để lưu ghi chú
+      function saveNotes(index) {
+        notes[index] = notesArea.value;
+        localStorage.setItem("notes", JSON.stringify(notes));
+      }
+
+      // Hàm để tải ghi chú
+      function loadNotes(index) {
+        notesArea.value = notes[index] || "";
+      }
+
+      // Khi ghi chú thay đổi
+      notesArea.addEventListener("input", function () {
+        const selectedIndex = audioSelect.selectedIndex + 1;
+        saveNotes(selectedIndex);
+      });
+
+      // Cập nhật trạng thái nút đánh dấu khi chọn audio
+      function updateCompleteButton() {
+        const selectedIndex = audioSelect.selectedIndex + 1;
+        if (completedAudios.includes(selectedIndex)) {
+          completeBtn.textContent = "Hủy đánh dấu đã hoàn thành";
+        } else {
+          completeBtn.textContent = "Đánh dấu đã hoàn thành";
+        }
+      }
+
+      // Khởi tạo với audio đầu tiên
+      window.addEventListener("load", function () {
+        // Kiểm tra chế độ tối
+        if (localStorage.getItem("darkMode") === "enabled") {
+          document.body.classList.add("dark-mode");
+          toggleDarkMode.textContent = "Chế độ Sáng";
+        }
+
+        loadAudio(1);
+      });
+
+      // Tìm kiếm trong dropdown
+      searchInput.addEventListener("input", function () {
+        const filter = this.value.toLowerCase();
+        const options = audioSelect.options;
+        for (let i = 0; i < options.length; i++) {
+          const txtValue = options[i].text.toLowerCase();
+          if (txtValue.includes(filter)) {
+            options[i].style.display = "";
+          } else {
+            options[i].style.display = "none";
+          }
+        }
+      });
+
+      // Cập nhật nút điều hướng (trước đó/tiếp theo)
+      function updateNavButtons() {
+        prevBtn.disabled = audioSelect.selectedIndex === 0;
+        nextBtn.disabled = audioSelect.selectedIndex === totalAudios - 1;
+      }
+
+      // Cập nhật nút điều hướng khi tải audio mới
+      function loadAudio(index) {
+        audioSource.src = index + ".mp3"; // Đặt nguồn audio
+        audioPlayer.load(); // Tải lại audio
+        audioPlayer.play(); // Tự động phát
+        currentAudio.textContent = audioSelect.options[index - 1].text.replace(
+          " ✔️",
+          ""
+        ); // Cập nhật tiêu đề
+        progressBar.style.width = "0%"; // Reset thanh tiến trình
+        loadNotes(index); // Tải ghi chú
+        updateCompleteButton(); // Cập nhật nút đánh dấu
+        updateNavButtons(); // Cập nhật nút điều hướng
+      }
+
+      // Gọi lại loadAudio để đảm bảo mọi thứ được cập nhật
+      audioPlayer.addEventListener("loadedmetadata", function () {
+        if (!timeDisplay.textContent.includes("/")) {
+          const duration = formatTime(audioPlayer.duration);
+          timeDisplay.textContent = `00:00 / ${duration}`;
+        }
       });
     </script>
   </body>
